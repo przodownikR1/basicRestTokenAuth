@@ -1,17 +1,19 @@
 package pl.java.scalatech.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import pl.java.scalatech.security.ApiAuthenticationEntryPoint;
-import pl.java.scalatech.security.ApiAuthenticationFailureHandler;
-import pl.java.scalatech.security.ApiAuthenticationSuccessHandler;
+import pl.java.scalatech.security.AuthenticationTokenFilter;
 
 
 @Configuration
@@ -19,12 +21,21 @@ import pl.java.scalatech.security.ApiAuthenticationSuccessHandler;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private ApiAuthenticationEntryPoint authenticationEntryPoint;
-    @Autowired
-    private ApiAuthenticationFailureHandler authenticationFailureHandler;
-    @Autowired
-    private ApiAuthenticationSuccessHandler authenticationSuccessHandler;
 
-
+    
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+      return super.authenticationManagerBean();
+    }
+    
+    @Bean
+    public AuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
+      AuthenticationTokenFilter authenticationTokenFilter = new AuthenticationTokenFilter();
+      authenticationTokenFilter.setAuthenticationManager(authenticationManagerBean());
+      return authenticationTokenFilter;
+    }
+    
     @Override
     public void configure(WebSecurity web) throws Exception {
         // @formatter:off
@@ -49,7 +60,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.httpBasic().and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         
-
+        http
+        .addFilterBefore( authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+  
           // @formatter:on
     }
 
