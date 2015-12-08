@@ -1,0 +1,3 @@
+# basicAuthOpenId
+# basicAuthRest
+# basicRestTokenAuth
